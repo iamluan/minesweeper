@@ -28,7 +28,6 @@ class Grid:
             return 1
         else:
             start_flood_fill(grid=self, selected_loc=(x, y))
-            print('click')
             return 1
 
     def is_opened(self, x: int, y: int):

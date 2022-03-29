@@ -1,9 +1,10 @@
 import random
 from queue import Queue
+import threading
 
 
-WIDTH = 18
-TOTAL_BOM_NUM = 2*WIDTH
+WIDTH = 15
+TOTAL_BOM_NUM = 3*WIDTH
 BOM_SYMBOL = '*'
 EMPTY_SYMBOL = ' '
 
@@ -59,9 +60,9 @@ def locate_surround(x, y, width):
     return surr_loc
 
 
-def assign_bom(matrix):
+def assign_bombs(matrix):
     """
-        assign bom to random location of the given matrix 
+        assign bombs to random location of the given matrix
     """
     bom_pos = random_bomb(TOTAL_BOM_NUM)
     for pos in list(bom_pos):
@@ -70,11 +71,10 @@ def assign_bom(matrix):
         matrix[x][y] = BOM_SYMBOL
 
 
-def assign_bom_num(matrix):
+def assign_bomb_num(matrix):
     """
         after assigning random bombs, fill the number of surround bombs of each cell in matrix
     """
-    # * don't need to travel all cells, just surround the bombs
     for row in range(WIDTH):
         for e in range(WIDTH):
             # skip bom cell
@@ -86,71 +86,74 @@ def assign_bom_num(matrix):
                     bom_num += 1
             matrix[row][e] = str(bom_num)
 
-def locate_floodfill(x, y, width):
+
+def get_orthogonal_neighbor_locations(x, y, width):
     """
         return surround locations of a given location (x,y) in a matrix that has a width of 'width'
     """
-    surr_loc = {(x+1, y), (x, y+1), 
+    surround_loc = {(x+1, y), (x, y+1),
                 (x-1, y), (x, y-1),
                 (x+1, y-1), (x-1, y+1)}
     # when given loc at the first row
     if x == 0:
-        surr_loc.discard((x-1, y))
-        surr_loc.discard((x-1, y+1))
+        surround_loc.discard((x-1, y))
+        surround_loc.discard((x-1, y+1))
     # at the final row
     if x == width - 1:
-        surr_loc.discard((x+1, y))
-        surr_loc.discard((x+1, y-1))
+        surround_loc.discard((x+1, y))
+        surround_loc.discard((x+1, y-1))
     # at the first col
     if y == 0:
-        surr_loc.discard((x, y-1))
-        surr_loc.discard((x+1, y-1))
+        surround_loc.discard((x, y-1))
+        surround_loc.discard((x+1, y-1))
     # at the final col
     if y == width-1:
-        surr_loc.discard((x, y+1))
-        surr_loc.discard((x-1, y+1))
-    return surr_loc
-  
+        surround_loc.discard((x, y+1))
+        surround_loc.discard((x-1, y+1))
+    return surround_loc
+
+
 def open_all_neighbors_of_empty_cell(grid, x: int, y: int):
-    surround_loc = locate_surround(x, y, WIDTH)
+    surround_loc = get_orthogonal_neighbor_locations(x, y, WIDTH)
     for loc in surround_loc:
         grid.grid[loc[0]][loc[1]].reveal()
 
-
-import threading
 
 def flood_fill(grid, selected_loc: tuple()):
     """
     using breath first search
     """
+
     x = selected_loc[0]
     y = selected_loc[1]
     cell_queue = Queue(maxsize=WIDTH**2)
     cell_queue.put((x, y))
+
     # a 2D matrix that represents opening status of the cells
     visited_cells = generate_matrix(WIDTH, False)
+
     while not cell_queue.empty():
+
         current_cell = cell_queue.get()
         x, y = current_cell[0], current_cell[1]
 
         # reveal the current cell
         grid.grid[x][y].reveal()
-        
         # mark current cell as opened
         visited_cells[x][y] = True
         open_all_neighbors_of_empty_cell(grid, x, y)
         
         # visit all neighbors of the current cell    
-        surround_loc = locate_floodfill(x, y, WIDTH)
+        surround_loc = get_orthogonal_neighbor_locations(x, y, WIDTH)
         for loc in surround_loc:
-            surr_x, surr_y = loc[0], loc[1]
+            surround_x, surround_y = loc[0], loc[1]
             # if neighbor is empty and not opened
-            if grid.get_cell_value(surr_x, surr_y) == '0' \
-                and visited_cells[surr_x][surr_y] == False:
+            if grid.get_cell_value(surround_x, surround_y) == '0' and \
+                    visited_cells[surround_x][surround_y] is False:
                 cell_queue.put(loc)
-    return
 
-# using thread to avoid tkinker freeze  
+
+# using thread to avoid Tkinker freeze
 def start_flood_fill(grid, selected_loc: tuple()):
     threading.Thread(target=flood_fill, args=(grid, selected_loc)).start()
 
