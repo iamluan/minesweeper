@@ -1,33 +1,34 @@
 from tkinter import Tk, Frame, PhotoImage, RAISED
-from control import generate_matrix, print_matrix, assign_bombs, assign_bomb_num
-from control import WIDTH
+from control import Controller, WIDTH
 from components import Grid
 
+class Game:
+    def __init__(self, controller: Controller) -> None:
+        self.controller = controller
+        self.window = Tk()
+        self.window.protocol("WM_DELETE_WINDOW", self.quit_game)
+        self.window.title('Minesweeper')
 
-# to stop the program when the window is closed
-def quit_game():
-    print('Quit')
-    window.quit()
-    window.destroy()
+        # change icon image of the window
+        icon = PhotoImage(file='images//bomb.png')
+        self.window.iconphoto(True, icon)
 
+        # to wrap the grid of cell
+        frame = Frame(self.window, bd=5, relief=RAISED)
+        frame.pack()
 
-window = Tk()
-window.protocol("WM_DELETE_WINDOW", quit_game)
-window.title('Minesweeper')
+        matrix = self.controller.generate_matrix(WIDTH, None)
+        self.controller.assign_bombs(matrix)
+        self.controller.assign_bomb_num(matrix)
+        self.controller.print_matrix(matrix)
 
-# change icon image of the window
-icon = PhotoImage(file='images//bomb.png')
-window.iconphoto(True, icon)
+        grid = Grid(data=matrix, wrapper=frame, controller=self.controller)
+        self.window.mainloop()
 
-# to wrap the grid of cell
-frame = Frame(window, bd=5, relief=RAISED)
-frame.pack()
+    # to stop the program when the window is closed
+    def quit_game(self):
+        print('Quit')
+        self.window.quit()
+        self.window.destroy()
 
-matrix = generate_matrix(WIDTH, None)
-assign_bombs(matrix)
-assign_bomb_num(matrix)
-print_matrix(matrix)
-
-grid = Grid(data=matrix, wrapper=frame)
-
-window.mainloop()
+game = Game(controller=Controller())

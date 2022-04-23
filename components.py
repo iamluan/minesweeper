@@ -1,16 +1,9 @@
-from control import BOM_SYMBOL, WIDTH, start_flood_fill
+from control import Controller, WIDTH, BOM_SYMBOL
 from tkinter import Label, RAISED
 
-
-def stop_game(grid):
-    # remove events of each cell
-    for i in range(WIDTH):
-        for j in range(WIDTH):
-            grid.grid[i][j].unbind_event()
-
-
 class Grid:
-    def __init__(self, data, wrapper):
+    def __init__(self, data, wrapper, controller: Controller):
+        self.controller = controller;
         self.grid = data.copy()
         for i in range(len(data)):
             for j in range(len(data)):
@@ -21,13 +14,13 @@ class Grid:
         if self.get_cell_value(x, y) == BOM_SYMBOL:
             self.grid[x][y].reveal()
             # stop game
-            stop_game(self)
+            self.remove_all_events()
             return -1
         elif self.get_cell_value(x, y) != '0':
             self.grid[x][y].reveal()
             return 1
         else:
-            start_flood_fill(grid=self, selected_loc=(x, y))
+            self.controller.start_flood_fill(grid=self, selected_loc=(x, y))
             return 1
 
     def is_opened(self, x: int, y: int):
@@ -38,6 +31,12 @@ class Grid:
 
     def get_cell(self, x: int, y: int):
         return self.grid[x][y]
+
+    def remove_all_events(self):
+        # remove events of each cell
+        for i in range(WIDTH):
+            for j in range(WIDTH):
+                self.grid[i][j].unbind_event()
 
 
 class Cell:
