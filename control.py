@@ -1,5 +1,6 @@
 import random
 from queue import Queue
+from tkinter import Label
 from components import Grid, Panel, Cell
 from threading import Thread
 from typing import Dict
@@ -230,6 +231,23 @@ class FlagControl:
             self.flagging(x, y) 
             cell.flagged()
             self.panel.change_display_num(self.num_flags)
+        
+        # check whether all bombs are flagged
+        if self.num_flags == 0:
+            is_win = True
+            for i in range(self.grid.width):
+                for j in range(self.grid.width):
+                    if self.is_flagged[i][j] == True and self.grid.cells[i][j].value != BOM_SYMBOL:
+                        is_win = False
+            if is_win == True:
+                self.grid.remove_all_events()
+                # display "You win" on the panel
+                self.panel.flag_container.pack_forget()
+                self.panel.display_num.pack_forget()
+                self.panel.undo_button.pack_forget()
+                win_label = Label(self.panel.panel, text=f'You Win', font=('Arial', 20))
+                win_label.pack()
+            
 
     def set_num_flags(self, num_flags):
         self.num_flags = num_flags
@@ -254,7 +272,8 @@ class UndoControl:
     def undo(self, event):
         for row in self.grid.cells:
             for cell in row:
-                CellUndoThread(cell).start()
+                if cell.value == BOM_SYMBOL:
+                    CellUndoThread(cell).start()
         if self.grid_control.game_over is True:
             self.grid_control.binding_click_event_to_cells(self.grid.cells)
             self.flag_control.bind_event_to_cell()

@@ -17,7 +17,7 @@ class Cell:
 
     def reveal(self):
         
-        self.state_list.append([self.open, self.label['bg'], self.label['text']])
+        self.state_list.append((self.open, self.label['bg'], self.label['text']))
         # print(self.state_list)
 
         self.open = True
